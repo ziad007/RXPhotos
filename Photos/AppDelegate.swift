@@ -14,17 +14,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
 
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
-
-        UINavigationBar.appearance().backgroundColor = .blue
-        let appWindow = UIWindow(frame: UIScreen.main.bounds)
-        window = appWindow
-
-        let vc = PhotosViewController()
-
-        let aObjNavi = UINavigationController(rootViewController: vc)
-        window?.rootViewController = aObjNavi
+        let nav = UINavigationController(rootViewController: PhotosViewController())
+        window?.rootViewController = nav
         window?.makeKeyAndVisible()
 
         // Override point for customization after application launch.

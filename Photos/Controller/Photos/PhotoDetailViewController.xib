@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="14313.18" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina4_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14283.14"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14460.20"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -22,13 +23,13 @@
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
                 <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="G7D-Fn-i8w">
-                    <rect key="frame" x="16" y="30" width="343" height="617"/>
+                    <rect key="frame" x="16" y="36" width="343" height="615"/>
                     <subviews>
                         <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="mK5-JN-S1e">
                             <rect key="frame" x="0.0" y="0.0" width="343" height="303.5"/>
                         </imageView>
                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="oI9-O7-7Ri">
-                            <rect key="frame" x="0.0" y="313.5" width="343" height="303.5"/>
+                            <rect key="frame" x="0.0" y="313.5" width="343" height="301.5"/>
                             <fontDescription key="fontDescription" type="system" pointSize="17"/>
                             <nil key="textColor"/>
                             <nil key="highlightedColor"/>
@@ -38,11 +39,12 @@
             </subviews>
             <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
             <constraints>
-                <constraint firstAttribute="trailing" secondItem="G7D-Fn-i8w" secondAttribute="trailing" constant="16" id="QOl-Fd-QMy"/>
-                <constraint firstAttribute="bottom" secondItem="G7D-Fn-i8w" secondAttribute="bottom" constant="20" id="TlL-Np-Klv"/>
-                <constraint firstItem="G7D-Fn-i8w" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" constant="16" id="YSn-Wc-mj1"/>
-                <constraint firstItem="G7D-Fn-i8w" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" constant="30" id="nJe-Bf-GWy"/>
+                <constraint firstItem="G7D-Fn-i8w" firstAttribute="top" secondItem="ySh-49-rWM" secondAttribute="top" constant="16" id="5H0-IO-Ios"/>
+                <constraint firstItem="G7D-Fn-i8w" firstAttribute="leading" secondItem="ySh-49-rWM" secondAttribute="leading" constant="16" id="Bh2-3f-qbR"/>
+                <constraint firstItem="ySh-49-rWM" firstAttribute="bottom" secondItem="G7D-Fn-i8w" secondAttribute="bottom" constant="16" id="Jqu-i3-PFM"/>
+                <constraint firstItem="ySh-49-rWM" firstAttribute="trailing" secondItem="G7D-Fn-i8w" secondAttribute="trailing" constant="16" id="xrL-YO-0NH"/>
             </constraints>
+            <viewLayoutGuide key="safeArea" id="ySh-49-rWM"/>
             <point key="canvasLocation" x="33.5" y="54.5"/>
         </view>
     </objects>

@@ -7,67 +7,61 @@
 //
 
 import Foundation
-
-protocol PhotoInteractorInputs {
-    func loadPhotos()
-}
+import RxSwift
 
 protocol PhotoInteractorOutputs {
-    var photosResponse: PagedPhotos? { get }
+    var photosViewModel: Observable<PhotosViewModel> { get }
 }
 
-final class PhotoInteractor: PhotoInteractorInputs, PhotoInteractorOutputs {
+final class PhotoInteractor: PhotoInteractorOutputs {
     var photoService: PhotoServiceProtocol
     weak var controller: PhotosViewController?
-    var photosResponse: PagedPhotos?
     var requestloadPhotosCompleteHandler: (() -> Void)?
 
-    var hasNextPage: Bool {
-        return photosResponse?.hasNext ?? false
-    }
-
-    var numberOfItems: Int {
-        return photosResponse?.values.count ?? 0
-    }
+    private let photosViewModelVariable: Variable<PhotosViewModel>
+    var photosViewModel: Observable<PhotosViewModel>
+    private let disposeBag = DisposeBag()
 
     init() {
         photoService = PhotoService()
+        let photoViewModelInitilized = PhotosViewModel()
+        photosViewModelVariable = Variable(photoViewModelInitilized)
+        photosViewModel = photosViewModelVariable.asObservable()
     }
 
     func loadPhotos() {
-        if let previousResult = photosResponse {
-            photoService.fetchNextRecentPhotos(pagedPhotos: previousResult) { [weak self] (response) in
-                guard let localSelf = self else { return }
-                switch response {
-                case .success(let response):
-                    if let response = response {
-                        localSelf.photosResponse = localSelf.appendData(for: previousResult, nextPhotosReponse: response)
-                        localSelf.requestloadPhotosCompleteHandler?()
+        if let previousResult = photosViewModelVariable.value.photosResponse {
+            photoService.fetchNextRecentPhotos(pagedPhotos: previousResult)
+                .subscribe(onNext: { [weak self] result in
+                    guard let localSelf = self else { return }
+                    switch result {
+                    case .success(let response):
+                        if let response = response {
+                            localSelf.photosViewModelVariable.value.photosResponse = response
+                            localSelf.requestloadPhotosCompleteHandler?()
+                        }
+                    case .failure(let error):
+                        localSelf.controller?.showErrorAlert(error)
+                        localSelf.photosViewModelVariable.value.error = error
+
                     }
-                case .failure(let error):
-                    localSelf.controller?.showErrorAlert(error)
-                }
-            }
+                })
+                .disposed(by: disposeBag)
         } else {
-            photoService.getRecentPhotos(page: 1) { [weak self] (response) in
-                guard let localSelf = self else { return }
+            photoService.getRecentPhotos(page: 1)
+                .subscribe(onNext: { [weak self] result in
+                    guard let localSelf = self else { return }
+                    switch result {
+                    case .success(let response):
+                        localSelf.photosViewModelVariable.value.photosResponse = response
+                        localSelf.requestloadPhotosCompleteHandler?()
+                    case .failure(let error):
+                        localSelf.controller?.showErrorAlert(error)
+                        localSelf.photosViewModelVariable.value.error = error
 
-                switch response {
-                case .success(let response):
-                    localSelf.photosResponse = response
-                    localSelf.requestloadPhotosCompleteHandler?()
-                case .failure(let error):
-                    localSelf.controller?.showErrorAlert(error)
-                }
-            }
+                    }
+                })
+                .disposed(by: disposeBag)
         }
-    }
-
-    private func appendData(for previousPhotosResponse: PagedPhotos, nextPhotosReponse: PagedPhotos) -> PagedPhotos {
-        var newPhotosReponse = nextPhotosReponse
-        var photos = previousPhotosResponse.values
-        photos.append(contentsOf: nextPhotosReponse.values)
-        newPhotosReponse.values = photos
-        return newPhotosReponse
     }
 }

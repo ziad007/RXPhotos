@@ -19,8 +19,7 @@ final class PhotoCollectionViewCell: UICollectionViewCell {
     }
 
     private func commonInit() {
-        self.contentView.autoresizingMask = [UIViewAutoresizing.flexibleWidth, UIViewAutoresizing.flexibleHeight]
-        self.frame = CGRect(origin: CGPoint.zero, size: CGSize(width: 999, height: 999))
+
         contentView.addSubview(photoImageView)
         layoutComponents()
     }

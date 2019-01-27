@@ -28,7 +28,6 @@ final class PhotoDetailViewController: UIViewController {
 
     private func setupNavigationItem() {
         navigationItem.title = ""
-        navigationController?.navigationBar.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.white]
     }
 
     init(for photo: Photo) {

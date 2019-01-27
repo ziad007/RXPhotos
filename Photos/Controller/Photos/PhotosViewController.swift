@@ -7,6 +7,7 @@
 //
 import Foundation
 import UIKit
+import RxSwift
 
 protocol PhotoController: class {
     func showErrorAlert(_ error: NSError)
@@ -17,8 +18,12 @@ final class PhotosViewController: UIViewController {
     static let height: CGFloat = 100
     static let itemPerRow: CGFloat = 4
 
-    fileprivate let photoInteractor: PhotoInteractor
-    fileprivate let sectionInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+    private let photoInteractor: PhotoInteractor
+    private let sectionInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+
+    private var photosViewModel: PhotosViewModel?
+
+    private let disposeBag = DisposeBag()
 
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -32,9 +37,9 @@ final class PhotosViewController: UIViewController {
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.registerNibForSupplementaryViewOfKind(
-            UICollectionElementKindSectionFooter, type: LoadingCollectionReusableView.self)
+            UICollectionView.elementKindSectionFooter, type: LoadingCollectionReusableView.self)
         collectionView.registerClassForSupplementaryViewOfKind(
-            UICollectionElementKindSectionFooter, type: EmptyStateCollectionReusableView.self)
+            UICollectionView.elementKindSectionFooter, type: EmptyStateCollectionReusableView.self)
         collectionView.registerClassForCellWithType(PhotoCollectionViewCell.self)
         return collectionView
     }()
@@ -59,24 +64,28 @@ final class PhotosViewController: UIViewController {
         setupNavigationItem()
         layoutComponents()
 
-        setupLoadCompletion()
+        bindViewModel()
         fetchData()
     }
 
     private func setupNavigationItem() {
         navigationItem.title = "Recent Photos"
-        navigationController?.navigationBar.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.white]
     }
 
     private func fetchData() {
         photoInteractor.loadPhotos()
     }
 
-    private func setupLoadCompletion() {
-        photoInteractor.requestloadPhotosCompleteHandler = { [weak self] () in
-            guard let localSelf = self else { return }
-            localSelf.collectionView.reloadData()
-        }
+    private func bindViewModel() {
+
+        photoInteractor.photosViewModel
+            .subscribe(onNext: { [weak self] photoViewModel in
+                guard let localSelf = self else { return }
+                localSelf.photosViewModel = photoViewModel
+                localSelf.collectionView.reloadData()
+            })
+            .disposed(by: disposeBag)
+
     }
 
     private func addComponents() {
@@ -92,7 +101,7 @@ final class PhotosViewController: UIViewController {
             ])
     }
 
-    fileprivate func scrollToBottom() -> Void {
+    fileprivate func didScrollToBottom() -> Void {
         fetchData()
     }
 }
@@ -103,10 +112,12 @@ extension PhotosViewController: UICollectionViewDelegateFlowLayout {
         layout collectionViewLayout: UICollectionViewLayout,
         referenceSizeForFooterInSection section: Int) -> CGSize {
 
-        if photoInteractor.hasNextPage || photoInteractor.photosResponse == nil {
+        guard let photosViewModel = photosViewModel else { fatalError() }
+
+        if photosViewModel.isLoading {
             return CGSize(width: collectionView.bounds.width, height: LoadingCollectionReusableView.Height)
         } else {
-            if photoInteractor.numberOfItems == 0 {
+            if photosViewModel.isEmpty {
                 return CGSize(width: collectionView.bounds.width, height: 30)
             } else {
                 return CGSize.zero
@@ -132,7 +143,9 @@ extension PhotosViewController: UICollectionViewDelegateFlowLayout {
     }
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        guard let photo = photoInteractor.photosResponse?.values[indexPath.row] else { return }
+        guard let photosViewModel = photosViewModel else { fatalError() }
+
+        let photo = photosViewModel.photos[indexPath.row]
         let vc = PhotoDetailViewController(for: photo)
         self.navigationController?.pushViewController(vc, animated: true)
     }
@@ -140,16 +153,18 @@ extension PhotosViewController: UICollectionViewDelegateFlowLayout {
 
 extension PhotosViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return photoInteractor.numberOfItems
+        return photosViewModel?.numberOfItems ?? 0
     }
 
     func collectionView(
         _ collectionView: UICollectionView,
         cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
 
+        guard let photosViewModel = photosViewModel else { fatalError() }
+
         let cell = collectionView.dequeueReusableCellWithType(
             PhotoCollectionViewCell.self, forIndexPath: indexPath)
-        guard let photo = photoInteractor.photosResponse?.values[indexPath.row] else { fatalError() }
+        let photo = photosViewModel.photos[indexPath.row]
         cell.configure(for: photo)
         return cell
     }
@@ -159,9 +174,11 @@ extension PhotosViewController: UICollectionViewDataSource {
             viewForSupplementaryElementOfKind kind: String,
             at indexPath: IndexPath) -> UICollectionReusableView {
 
-        if photoInteractor.hasNextPage || photoInteractor.photosResponse == nil {
-            if photoInteractor.numberOfItems > 0 {
-                scrollToBottom()
+        guard let photosViewModel = photosViewModel else { fatalError() }
+
+        if photosViewModel.isLoading {
+            if photosViewModel.hasNextPage {
+                didScrollToBottom()
             }
 
             let view = collectionView.dequeueReusableSupplementaryViewWithType(

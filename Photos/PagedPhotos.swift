@@ -34,7 +34,7 @@ import Foundation
         self.page = page
         self.total = total
 
-        self.values = values.flatMap { photoDictionary in
+        self.values = values.compactMap { photoDictionary in
             guard let photo = Photo(json: photoDictionary) else { return nil }
             return photo
         }
