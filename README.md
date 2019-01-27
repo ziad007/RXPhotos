@@ -2,9 +2,6 @@
 
 This is a sample project that displays Flicker photos using collectionView in swift.
 
-It was implemented with clean interactor architecture using the components below:
+It was implemented with MVVM + interactor architecture.
 
-- Models
-- Interactor
-- Service
-- Presenter
+
