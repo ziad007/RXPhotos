@@ -7,7 +7,7 @@ typealias PhotoResponse = (Result<PagedPhotos?, NSError>) -> Void
 protocol PhotoServiceProtocol {
 
     func getRecentPhotos(page: Int) -> Observable<Result<PagedPhotos?, NSError>>
-    func fetchNextRecentPhotos(pagedPhotos: PagedPhotos) -> Observable<Result<PagedPhotos?, NSError>>
+    func fetchNextRecentPhotos(previousPhotos: PagedPhotos) -> Observable<Result<PagedPhotos?, NSError>>
 }
 
 final class PhotoService: PhotoServiceProtocol {
@@ -38,16 +38,17 @@ final class PhotoService: PhotoServiceProtocol {
         }
     }
 
-    func fetchNextRecentPhotos(pagedPhotos: PagedPhotos) -> Observable<Result<PagedPhotos?, NSError>>  {
+    func fetchNextRecentPhotos(previousPhotos: PagedPhotos) -> Observable<Result<PagedPhotos?, NSError>>  {
         return Observable.create { observer in
-            self.getRecentPhotos(page: pagedPhotos.nextPage)
+            self.getRecentPhotos(page: previousPhotos.nextPage)
                 .subscribe(onNext: { result in
                 switch result {
                 case .success(let response):
-                    if let response = response {
-                        var mutable = pagedPhotos
-                        mutable.values.append(contentsOf: response.values)
-                        observer.on(.next(.success(mutable)))
+                    if var response = response {
+                        var mutablePhotos = previousPhotos.values
+                        mutablePhotos.append(contentsOf: response.values)
+                        response.values = mutablePhotos
+                        observer.on(.next(.success(response)))
                         observer.on(.completed)
                     }
                 case .failure(let error):

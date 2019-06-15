@@ -31,7 +31,7 @@ final class PhotoInteractor: PhotoInteractorOutputs {
 
     func loadPhotos() {
         if let previousResult = photosViewModelVariable.value.photosResponse {
-            photoService.fetchNextRecentPhotos(pagedPhotos: previousResult)
+            photoService.fetchNextRecentPhotos(previousPhotos: previousResult)
                 .subscribe(onNext: { [weak self] result in
                     guard let localSelf = self else { return }
                     switch result {
