@@ -16,7 +16,6 @@ protocol PhotoInteractorOutputs {
 final class PhotoInteractor: PhotoInteractorOutputs {
     var photoService: PhotoServiceProtocol
     weak var controller: PhotosViewController?
-    var requestloadPhotosCompleteHandler: (() -> Void)?
 
     private let photosViewModelVariable: Variable<PhotosViewModel>
     var photosViewModel: Observable<PhotosViewModel>
@@ -29,16 +28,20 @@ final class PhotoInteractor: PhotoInteractorOutputs {
         photosViewModel = photosViewModelVariable.asObservable()
     }
 
+    func resetData() {
+        photosViewModelVariable.value.resetData()
+        loadPhotos()
+    }
+
     func loadPhotos() {
-        if let previousResult = photosViewModelVariable.value.photosResponse {
-            photoService.fetchNextRecentPhotos(previousPhotos: previousResult)
+        if let previousPagedPhotos = photosViewModelVariable.value.pagedPhotos {
+            photoService.fetchNextRecentPhotos(previousPhotos: previousPagedPhotos)
                 .subscribe(onNext: { [weak self] result in
                     guard let localSelf = self else { return }
                     switch result {
                     case .success(let response):
                         if let response = response {
-                            localSelf.photosViewModelVariable.value.photosResponse = response
-                            localSelf.requestloadPhotosCompleteHandler?()
+                            localSelf.photosViewModelVariable.value.pagedPhotos = response
                         }
                     case .failure(let error):
                         localSelf.controller?.showErrorAlert(error)
@@ -53,8 +56,7 @@ final class PhotoInteractor: PhotoInteractorOutputs {
                     guard let localSelf = self else { return }
                     switch result {
                     case .success(let response):
-                        localSelf.photosViewModelVariable.value.photosResponse = response
-                        localSelf.requestloadPhotosCompleteHandler?()
+                        localSelf.photosViewModelVariable.value.pagedPhotos = response
                     case .failure(let error):
                         localSelf.controller?.showErrorAlert(error)
                         localSelf.photosViewModelVariable.value.error = error

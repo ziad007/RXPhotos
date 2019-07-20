@@ -24,6 +24,8 @@ final class PhotosViewController: UIViewController {
     private var photosViewModel: PhotosViewModel?
 
     private let disposeBag = DisposeBag()
+    var refreshControl: UIRefreshControl!
+
 
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -41,6 +43,11 @@ final class PhotosViewController: UIViewController {
         collectionView.registerClassForSupplementaryViewOfKind(
             UICollectionView.elementKindSectionFooter, type: EmptyStateCollectionReusableView.self)
         collectionView.registerClassForCellWithType(PhotoCollectionViewCell.self)
+
+        refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(didPullToRefresh), for: .valueChanged)
+        collectionView.addSubview(refreshControl)
+
         return collectionView
     }()
 
@@ -76,6 +83,8 @@ final class PhotosViewController: UIViewController {
         photoInteractor.loadPhotos()
     }
 
+    
+
     private func bindViewModel() {
 
         photoInteractor.photosViewModel
@@ -101,9 +110,16 @@ final class PhotosViewController: UIViewController {
             ])
     }
 
-    fileprivate func didScrollToBottom() -> Void {
+    private func didScrollToBottom() -> Void {
         fetchData()
     }
+
+    @objc func didPullToRefresh() {
+        photoInteractor.resetData()
+
+        refreshControl.endRefreshing()
+    }
+    
 }
 
 extension PhotosViewController: UICollectionViewDelegateFlowLayout {
@@ -114,14 +130,13 @@ extension PhotosViewController: UICollectionViewDelegateFlowLayout {
 
         guard let photosViewModel = photosViewModel else { fatalError() }
 
-        if photosViewModel.isLoading {
+        switch photosViewModel.state {
+        case .isLoading:
             return CGSize(width: collectionView.bounds.width, height: LoadingCollectionReusableView.Height)
-        } else {
-            if photosViewModel.isEmpty {
-                return CGSize(width: collectionView.bounds.width, height: 30)
-            } else {
-                return CGSize.zero
-            }
+        case .isEmpty:
+            return CGSize(width: collectionView.bounds.width, height: 30)
+        default:
+            return CGSize.zero
         }
     }
 
@@ -176,7 +191,7 @@ extension PhotosViewController: UICollectionViewDataSource {
 
         guard let photosViewModel = photosViewModel else { fatalError() }
 
-        if photosViewModel.isLoading {
+        if photosViewModel.state == .isLoading {
             if photosViewModel.hasNextPage {
                 didScrollToBottom()
             }

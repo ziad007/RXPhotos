@@ -8,29 +8,47 @@
 
 import Foundation
 
+enum ViewState {
+    case initilized
+    case isLoading
+    case isEmpty
+    case isLoaded
+    case error
+}
+
 struct PhotosViewModel {
 
-    var photosResponse: PagedPhotos?
-
+    // MARK: - Input:
+    var pagedPhotos: PagedPhotos?
     var error: Error?
 
+    // MARK: - Output:
     var photos: [Photo] {
-        return photosResponse?.values ?? []
+        return pagedPhotos?.values ?? []
     }
-
-    var isLoading: Bool {
-        return (hasNextPage || photosResponse == nil) && error == nil
-    }
-
-    var isEmpty: Bool {
-        return numberOfItems == 0
+    var state: ViewState {
+        if (hasNextPage || pagedPhotos == nil) && error == nil {
+            return .isLoading
+        } else if numberOfItems == 0 {
+            return .isEmpty
+        } else if pagedPhotos != nil && error == nil {
+            return .isLoaded
+        } else if error != nil {
+            return .error
+        } else {
+            return .initilized
+        }
     }
 
     var hasNextPage: Bool {
-        return photosResponse?.hasNext ?? false
+        return pagedPhotos?.hasNext ?? false
     }
 
     var numberOfItems: Int {
-        return photosResponse?.values.count ?? 0
+        return pagedPhotos?.values.count ?? 0
+    }
+
+    mutating func resetData() {
+        pagedPhotos = nil
     }
 }
